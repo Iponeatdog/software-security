@@ -5,7 +5,7 @@ and apply STRIDE to its components (web client, app, SQLite DB, /upload).
 """
 from flask import Flask, request, jsonify, send_from_directory
 import sqlite3, os
-
+from werkzeug.utils import secure_filename
 app = Flask(__name__)
 DB = "notes.db"
 UPLOAD_DIR = "uploads"
@@ -30,9 +30,11 @@ def notes():
 
 @app.route("/upload", methods=["POST"])
 def upload():
-    f = request.files["file"]
-    f.save(os.path.join(UPLOAD_DIR, f.filename))
-    return {"saved": f.filename}
+    f = request.files['file']
+    name = secure_filename(f.filename)
+    if not name or name != f.filename:
+        return {"error": "bad filename"}, 400
+    f.save(os.path.join(UPLOAD_DIR, name))
 
 @app.route("/files/<name>")
 def files(name):
